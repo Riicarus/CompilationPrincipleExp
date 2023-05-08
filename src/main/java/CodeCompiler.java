@@ -45,6 +45,8 @@ public class CodeCompiler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        CommandLogger.log("Lexical analyze succeeds");
     }
 
 }

@@ -112,7 +112,7 @@ public class LexicalAnalyzer {
      * Set idx points to the nearest next no-blank byte.
      */
     protected void ignoreBlankSpace() {
-        while (isBlankSpace()) {
+        while (!isEnd() && isBlankSpace()) {
             nextByte();
         }
     }
@@ -120,9 +120,8 @@ public class LexicalAnalyzer {
     protected void nextByte() {
         if (idx < buffer.length - 1) {
             b = buffer[++idx];
-        } else {
+        } else if (idx == buffer.length - 1){
             idx++;
-            b = 0;
         }
     }
 
@@ -172,13 +171,13 @@ public class LexicalAnalyzer {
     }
 
     protected boolean isEnd() {
-        return idx == buffer.length;
+        return idx >= buffer.length;
     }
 
     protected void handleConstant() {
         tokenBuilder.append(b);
         nextByte();
-        while (true) {
+        while (!isEnd()) {
             if (isDigit()) {
                 tokenBuilder.append(b);
                 nextByte();
@@ -193,7 +192,7 @@ public class LexicalAnalyzer {
     protected void handleWord() {
         tokenBuilder.append(b);
         nextByte();
-        while (true) {
+        while (!isEnd()) {
             if (isLetter() || isDigit()) {
                 tokenBuilder.append(b);
                 nextByte();

@@ -1,3 +1,6 @@
+import com.riicarus.comandante.main.CommandLauncher;
+import com.riicarus.comandante.manage.ConsoleIOListener;
+
 import java.io.File;
 
 /**
@@ -14,6 +17,11 @@ public class TestMain {
         File file = new File("");
         String absPath = file.getAbsolutePath();
         codeCompiler.compile(absPath + "\\code.pas", absPath);
+
+        CompileCommand.defineCommand();
+        CommandLauncher.enable();
+        Thread thread = new Thread(new ConsoleIOListener());
+        thread.start();
     }
 
 }

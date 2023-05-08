@@ -1,5 +1,7 @@
 import com.riicarus.comandante.main.CommandLauncher;
 
+import java.util.LinkedList;
+
 /**
  * [FEATURE INFO]<br/>
  *
@@ -11,14 +13,16 @@ public class CompileCommand {
 
     public static CodeCompiler codeCompiler = new CodeCompiler();
 
+    @SuppressWarnings("all")
     public static void defineCommand() {
         CommandLauncher.register().builder()
                 .main("compiler")
                 .opt("compile", "c")
-                .arg("path")
+                .arg("srcPath")
+                .arg("dstPath")
                 .executor(
                         (args, pipedArg) -> {
-                            System.out.println(args.toString());
+                            codeCompiler.compile(((LinkedList<String>)args).get(0), ((LinkedList<String>)args).get(1));
                             return "";
                         }
                 );
