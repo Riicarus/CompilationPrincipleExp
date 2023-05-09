@@ -575,12 +575,27 @@ public class GrammarAnalyzer {
      * Function execution
      */
     private void Fe() throws GrammarException {
-        setRetractPoint();
-
         try {
+            setRetractPoint();
+
             I();
             checkReservedWord("(");
             Ae();
+            checkReservedWord(")");
+
+            unsetRetractPoint();
+            return;
+        } catch (GrammarException e) {
+            retract();
+            prevException = e;
+        }
+
+        try {
+            setRetractPoint();
+
+            I();
+            checkReservedWord("(");
+            V();
             checkReservedWord(")");
 
             unsetRetractPoint();
