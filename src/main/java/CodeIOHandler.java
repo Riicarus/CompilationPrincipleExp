@@ -13,19 +13,28 @@ import java.io.IOException;
 public class CodeIOHandler {
 
     private FileReader pasReader;
+
     private FileWriter dydWriter;
     private FileWriter errWriter;
+    private FileWriter dysWriter;
+    private FileWriter varWriter;
+    private FileWriter proWriter;
 
     private String srcPath;
 
     private String dstPath;
 
+    private String filename;
+
     public void setPath(String srcPath, String dstPath) throws IOException {
         pasReader = new FileReader(srcPath);
         String fullFilename = srcPath.substring(srcPath.lastIndexOf("\\") + 1);
-        String filename = fullFilename.substring(0, fullFilename.lastIndexOf("."));
+        filename = fullFilename.substring(0, fullFilename.lastIndexOf("."));
         dydWriter = new FileWriter(dstPath + "\\" + filename + ".dyd", false);
         errWriter = new FileWriter(dstPath + "\\" + filename + ".err", false);
+        dysWriter = new FileWriter(dstPath + "\\" + filename + ".dys", false);
+        varWriter = new FileWriter(dstPath + "\\" + filename + ".var", false);
+        proWriter = new FileWriter(dstPath + "\\" + filename + ".pro", false);
 
         this.srcPath = srcPath;
         this.dstPath = dstPath;
@@ -34,10 +43,15 @@ public class CodeIOHandler {
     @SuppressWarnings("all")
     public char[] readCodeFromFile() throws IOException {
         File file = new File(srcPath);
-        char[] buf = new char[(int)file.length()];
+        char[] buf = new char[(int) file.length()];
         pasReader.read(buf);
 
         return buf;
+    }
+
+    public boolean checkErrFile() {
+        File file = new File(dstPath + "\\" + filename + ".err");
+        return file.length() == 0;
     }
 
     public void appendDyd(CharSequence cs) throws IOException {
@@ -53,9 +67,18 @@ public class CodeIOHandler {
         dydWriter.flush();
     }
 
+    public void flushForGrammar() throws IOException {
+        dysWriter.flush();
+        varWriter.flush();
+        proWriter.flush();
+    }
+
     public void close() throws IOException {
         pasReader.close();
         errWriter.close();
         dydWriter.close();
+        dysWriter.close();
+        varWriter.close();
+        proWriter.close();
     }
 }

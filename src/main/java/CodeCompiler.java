@@ -1,6 +1,7 @@
 import com.riicarus.comandante.main.CommandLogger;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * [FEATURE INFO]<br/>
@@ -12,7 +13,8 @@ import java.io.IOException;
 public class CodeCompiler {
 
     private final CodeIOHandler ioHandler = new CodeIOHandler();
-    private final LexicalAnalyzer lexicalAnalyzer = new LexicalAnalyzer();
+    private final LexicalAnalyzer lexicalAnalyzer = new LexicalAnalyzer(ioHandler);
+    private final GrammarAnalyzer grammarAnalyzer = new GrammarAnalyzer(ioHandler);
 
     public void compile(String srcPath, String dstPath) {
         char[] buffer;
@@ -24,29 +26,30 @@ public class CodeCompiler {
             return;
         }
 
-        lexicalAnalyzer.input(buffer);
-        try {
-            try {
-                while (true) {
-                    final LexicalToken token = lexicalAnalyzer.analyzeOne();
-                    if (token != null) {
-                        ioHandler.appendDyd(token.toString());
-                        ioHandler.appendDyd("\r\n");
-                    } else {
-                        break;
-                    }
-                }
-            } catch (LexicalException e) {
-                CommandLogger.log(e.getMessage());
-                ioHandler.appendErr(e.getMessage());
-            }
+        List<LexicalToken> tokens = doLexicalAnalyze(buffer);
 
-            ioHandler.flushForLexical();
+        try {
+            doGrammarAnalyze(tokens);
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
-
-        CommandLogger.log("Lexical analyze succeeds");
     }
 
+    private List<LexicalToken> doLexicalAnalyze(char[] buffer) {
+        lexicalAnalyzer.input(buffer);
+        return lexicalAnalyzer.doAnalyze();
+    }
+
+    private void doGrammarAnalyze(List<LexicalToken> tokens) throws IOException {
+        if (ioHandler.checkErrFile()) {
+            try {
+                grammarAnalyzer.input(tokens);
+                grammarAnalyzer.doAnalyze();
+            } catch (GrammarException e) {
+                ioHandler.appendErr(e.getMessage());
+                CommandLogger.log(e.getMessage());
+            }
+        }
+    }
 }

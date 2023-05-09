@@ -1,4 +1,9 @@
+import com.riicarus.comandante.main.CommandLogger;
+
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * [FEATURE INFO]<br/>
@@ -42,6 +47,8 @@ public class LexicalAnalyzer {
 
     private final StringBuilder tokenBuilder = new StringBuilder();
 
+    private final CodeIOHandler ioHandler;
+
     private LexicalToken token;
 
     private char[] buffer;
@@ -54,7 +61,12 @@ public class LexicalAnalyzer {
 
     private boolean ended;
 
-    public LexicalAnalyzer() {
+    public LexicalAnalyzer(CodeIOHandler ioHandler) {
+        this.ioHandler = ioHandler;
+    }
+
+    public static LexicalToken getReserved(String key) {
+        return RESERVED_SYMBOL_TOKENS.get(key);
     }
 
     protected void resetForNextProgram() {
@@ -77,7 +89,37 @@ public class LexicalAnalyzer {
         this.b = buffer[idx];
     }
 
-    public LexicalToken analyzeOne() throws LexicalException {
+    public List<LexicalToken> doAnalyze() {
+        List<LexicalToken> tokens = new LinkedList<>();
+        try {
+            try {
+                while (true) {
+                    final LexicalToken token = analyzeOne();
+                    if (token != null) {
+                        ioHandler.appendDyd(token.toString());
+                        ioHandler.appendDyd("\r\n");
+                        tokens.add(token);
+                    } else {
+                        break;
+                    }
+                }
+            } catch (LexicalException e) {
+                CommandLogger.log(e.getMessage());
+                ioHandler.appendErr(e.getMessage());
+            }
+
+            ioHandler.flushForLexical();
+        } catch (IOException e) {
+            e.printStackTrace();
+            CommandLogger.log("Write Lexical analyze result failed.");
+        }
+
+        CommandLogger.log("Lexical analyze succeeded.");
+
+        return tokens;
+    }
+
+    protected LexicalToken analyzeOne() throws LexicalException {
         resetForNextToken();
 
         ignoreBlankSpace();
