@@ -156,7 +156,7 @@ public class LexicalAnalyzer {
     }
 
     protected boolean isReservedWord(String word) {
-        return SymbolManager.RESERVED_SYMBOL_TOKENS.containsKey(word);
+        return SymbolManager.containsReservedToken(word);
     }
 
     protected boolean isEOLN() {

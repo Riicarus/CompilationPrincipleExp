@@ -62,6 +62,18 @@ public class CodeIOHandler {
         errWriter.append(cs);
     }
 
+    public void appendPro(CharSequence cs) throws IOException {
+        proWriter.append(cs);
+    }
+
+    public void appendVar(CharSequence cs) throws IOException {
+        varWriter.append(cs);
+    }
+
+    public void appendDys(CharSequence cs) throws IOException {
+        dysWriter.append(cs);
+    }
+
     public void flushForLexical() throws IOException {
         errWriter.flush();
         dydWriter.flush();

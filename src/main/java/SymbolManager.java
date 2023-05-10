@@ -1,4 +1,7 @@
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Stack;
 
 /**
  * [FEATURE INFO]<br/>
@@ -9,7 +12,7 @@ import java.util.HashMap;
  */
 public class SymbolManager {
 
-    public static final HashMap<String, LexicalToken> RESERVED_SYMBOL_TOKENS = new HashMap<>();
+    private static final HashMap<String, LexicalToken> RESERVED_SYMBOL_TOKENS = new HashMap<>();
 
     public static final int IDENTIFIER_TOKEN_TYPE = 10;
     public static final int CONSTANT_TOKEN_TYPE = 11;
@@ -42,5 +45,61 @@ public class SymbolManager {
 
     public static LexicalToken getReservedToken(String name) {
         return RESERVED_SYMBOL_TOKENS.get(name);
+    }
+
+    public static boolean containsReservedToken(String name) {
+        return RESERVED_SYMBOL_TOKENS.containsKey(name);
+    }
+
+    private static final HashSet<GrammarVariable> VARIABLES = new HashSet<>();
+
+    private static final HashSet<GrammarProcess> PROCESSES = new HashSet<>();
+
+    public static void addVariable(GrammarVariable variable) {
+        VARIABLES.add(variable);
+    }
+
+    public static boolean containsVariable(GrammarVariable variable) {
+        return VARIABLES.contains(variable);
+    }
+
+    public static boolean containsVariable(String name, int level, Stack<GrammarProcess> processStack) {
+        for (GrammarVariable variable : VARIABLES) {
+            for (GrammarProcess process : processStack) {
+                if (variable.getVname().equals(name) && variable.getVproc().equals(process.getPname()) && variable.getVlev() <= level) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static int getVariableIdx() {
+        return VARIABLES.size();
+    }
+
+    public static void clearVariable() {
+        VARIABLES.clear();
+    }
+
+    public static void addProcess(GrammarProcess process) {
+        PROCESSES.add(process);
+    }
+
+    public static boolean containsProcess(GrammarProcess process) {
+        return PROCESSES.contains(process);
+    }
+
+    public static void clearProcess() {
+        PROCESSES.clear();
+    }
+
+    public static HashSet<GrammarVariable> getVARIABLES() {
+        return VARIABLES;
+    }
+
+    public static HashSet<GrammarProcess> getPROCESSES() {
+        return PROCESSES;
     }
 }

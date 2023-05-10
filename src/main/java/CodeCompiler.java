@@ -32,7 +32,6 @@ public class CodeCompiler {
             doGrammarAnalyze(tokens);
         } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
     }
 
@@ -46,6 +45,23 @@ public class CodeCompiler {
             try {
                 grammarAnalyzer.input(tokens);
                 grammarAnalyzer.doAnalyze();
+
+                for (GrammarProcess process : SymbolManager.getPROCESSES()) {
+                    ioHandler.appendPro(process.toString());
+                    ioHandler.appendPro("\r\n");
+                }
+
+                for (GrammarVariable variable : SymbolManager.getVARIABLES()) {
+                    ioHandler.appendVar(variable.toString());
+                    ioHandler.appendVar("\r\n");
+                }
+
+                for (LexicalToken token : tokens) {
+                    ioHandler.appendDys(token.toString());
+                    ioHandler.appendDys("\r\n");
+                }
+
+                ioHandler.flushForGrammar();
             } catch (GrammarException e) {
                 ioHandler.appendErr(e.getMessage());
                 CommandLogger.log(e.getMessage());

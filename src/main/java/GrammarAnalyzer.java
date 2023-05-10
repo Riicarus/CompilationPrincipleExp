@@ -17,17 +17,11 @@ public class GrammarAnalyzer {
     private final CodeIOHandler ioHandler;
 
     private final List<LexicalToken> tokens = new LinkedList<>();
-
-    private final List<GrammarVariable> variables = new LinkedList<>();
-
-    private final List<GrammarProcess> processes = new LinkedList<>();
-
-    private int tokenIdx = 0;
-
     private final Stack<Integer> retractIdxStack = new Stack<>();
-
+    private final Stack<GrammarProcess> processStack = new Stack<>();
+    private int tokenIdx = 0;
     private int line = 1;
-
+    private int processLevel = 0;
     private LexicalToken currentToken;
 
     private GrammarException prevException;
@@ -44,11 +38,13 @@ public class GrammarAnalyzer {
     }
 
     private void reset() {
-        variables.clear();
-        processes.clear();
+        SymbolManager.clearVariable();
+        SymbolManager.clearProcess();
         tokenIdx = 0;
         retractIdxStack.clear();
         line = 1;
+        processLevel = 0;
+        processStack.clear();
         currentToken = null;
     }
 
@@ -105,6 +101,20 @@ public class GrammarAnalyzer {
         System.out.println("retract: " + currentToken);
     }
 
+    private void increaseProcessLevel() {
+        processLevel++;
+    }
+
+    private void decreaseProcessLevel() {
+        processLevel--;
+    }
+
+    private void updateProcessLadrInStack(int ladr) {
+        for (GrammarProcess process : processStack) {
+            process.setLadr(ladr);
+        }
+    }
+
     @SuppressWarnings("all")
     private boolean isEnd() {
         return tokenIdx >= tokens.size();
@@ -124,11 +134,32 @@ public class GrammarAnalyzer {
         next();
     }
 
-    private void checkIdentifier() throws GrammarException {
+    private String checkDefineIdentifier() throws GrammarException {
         if (currentToken.getType() != SymbolManager.IDENTIFIER_TOKEN_TYPE) {
             throw new GrammarException("***LINE:" + line + "  expected: a identifier, but get: \"" + currentToken.getSymbol() + "\"");
         }
+
+        String name = currentToken.getSymbol();
+
         next();
+
+        return name;
+    }
+
+    private String checkExistIdentifier() throws GrammarException {
+        if (currentToken.getType() != SymbolManager.IDENTIFIER_TOKEN_TYPE) {
+            throw new GrammarException("***LINE:" + line + "  expected: a identifier, but get: \"" + currentToken.getSymbol() + "\"");
+        }
+
+        if (!SymbolManager.containsVariable(currentToken.getSymbol(), processLevel, processStack)) {
+            throw new GrammarException("***LINE:" + line + "  identifier: \"" + currentToken.getSymbol() + "\" is not defined.");
+        }
+
+        String name = currentToken.getSymbol();
+
+        next();
+
+        return name;
     }
 
     /**
@@ -147,6 +178,11 @@ public class GrammarAnalyzer {
 
         try {
             checkReservedWord("begin");
+
+            GrammarProcess process = new GrammarProcess("main", "integer", processLevel, 0, 0);
+            SymbolManager.addProcess(process);
+            processStack.push(process);
+
             Dt();
             checkReservedWord(";");
             Et();
@@ -263,7 +299,11 @@ public class GrammarAnalyzer {
 
         try {
             checkReservedWord("integer");
-            V();
+            String variableName = V(true);
+            GrammarVariable variable = new GrammarVariable(variableName, processStack.peek().getPname(), 0, "integer", processLevel, SymbolManager.getVariableIdx());
+
+            SymbolManager.addVariable(variable);
+            updateProcessLadrInStack(variable.getVadr());
 
             unsetRetractPoint();
         } catch (GrammarException e) {
@@ -280,17 +320,41 @@ public class GrammarAnalyzer {
         setRetractPoint();
 
         try {
+            increaseProcessLevel();
             checkReservedWord("integer");
             checkReservedWord("function");
-            I();
+            String functionName = I(true);
+
+            GrammarProcess process = new GrammarProcess(functionName, "integer", processLevel, 0, 0);
+            GrammarVariable functionVariable = new GrammarVariable(functionName, processStack.peek().getPname(), 0, "integer", processLevel - 1, SymbolManager.getVariableIdx());
+
             checkReservedWord("(");
-            A();
+            String argumentName = A();
+            GrammarVariable variable = new GrammarVariable(argumentName, functionName, 1, "integer", processLevel, SymbolManager.getVariableIdx());
+            process.setFadr(variable.getVadr());
             checkReservedWord(")");
             checkReservedWord(";");
+
+            SymbolManager.addVariable(functionVariable);
+            SymbolManager.addVariable(variable);
+
+            if (SymbolManager.containsProcess(process)) {
+                throw new GrammarException("***LINE:" + line + "  function: \"" + functionName + "\" has already defined.");
+            }
+
+            processStack.push(process);
+            updateProcessLadrInStack(variable.getVadr());
+            SymbolManager.addProcess(process);
+
             Fb();
 
+            decreaseProcessLevel();
+            if (!processStack.empty()) {
+                processStack.pop();
+            }
             unsetRetractPoint();
         } catch (GrammarException e) {
+            decreaseProcessLevel();
             retract();
             throw e;
         }
@@ -299,15 +363,15 @@ public class GrammarAnalyzer {
     /**
      * Variable
      */
-    private void V() throws GrammarException {
-        I();
+    private String V(boolean isDefine) throws GrammarException {
+        return I(isDefine);
     }
 
     /**
      * Identifier
      */
-    private void I() throws GrammarException {
-        checkIdentifier();
+    private String I(boolean isDefine) throws GrammarException {
+        return isDefine ? checkDefineIdentifier() : checkExistIdentifier();
     }
 
     private void C() throws GrammarException {
@@ -337,8 +401,8 @@ public class GrammarAnalyzer {
     /**
      * Argument
      */
-    private void A() throws GrammarException {
-        V();
+    private String A() throws GrammarException {
+        return V(true);
     }
 
     /**
@@ -398,7 +462,7 @@ public class GrammarAnalyzer {
         try {
             checkReservedWord("read");
             checkReservedWord("(");
-            V();
+            V(false);
             checkReservedWord(")");
 
             unsetRetractPoint();
@@ -417,7 +481,7 @@ public class GrammarAnalyzer {
         try {
             checkReservedWord("write");
             checkReservedWord("(");
-            V();
+            V(false);
             checkReservedWord(")");
 
             unsetRetractPoint();
@@ -434,7 +498,7 @@ public class GrammarAnalyzer {
         setRetractPoint();
 
         try {
-            V();
+            V(false);
             checkReservedWord(":=");
             Ae();
 
@@ -551,7 +615,7 @@ public class GrammarAnalyzer {
 
         try {
             setRetractPoint();
-            V();
+            V(false);
 
             unsetRetractPoint();
             return;
@@ -578,7 +642,7 @@ public class GrammarAnalyzer {
         try {
             setRetractPoint();
 
-            I();
+            I(false);
             checkReservedWord("(");
             Ae();
             checkReservedWord(")");

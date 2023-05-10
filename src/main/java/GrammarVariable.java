@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 /**
  * [FEATURE INFO]<br/>
  *
@@ -86,5 +88,18 @@ public class GrammarVariable {
                 ", vlev=" + vlev +
                 ", vadr=" + vadr +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GrammarVariable variable = (GrammarVariable) o;
+        return vlev == variable.vlev && Objects.equals(vname, variable.vname) && Objects.equals(vproc, variable.vproc);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(vname, vproc, vlev);
     }
 }
