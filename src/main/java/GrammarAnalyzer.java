@@ -84,7 +84,7 @@ public class GrammarAnalyzer {
 
         System.out.println("next: " + currentToken);
 
-        if (currentToken.equals(LexicalAnalyzer.getReserved("EOLN"))) {
+        if (currentToken.equals(SymbolManager.getReservedToken("EOLN"))) {
             next();
             line++;
         }
@@ -111,21 +111,21 @@ public class GrammarAnalyzer {
     }
 
     private void checkReservedWord(String name) throws GrammarException {
-        if (!currentToken.equals(LexicalAnalyzer.getReserved(name))) {
+        if (!currentToken.equals(SymbolManager.getReservedToken(name))) {
             throw new GrammarException("***LINE:" + line + "  expected: \"" + name + "\", but get: \"" + currentToken.getSymbol() + "\"");
         }
         next();
     }
 
     private void checkConstant() throws GrammarException {
-        if (currentToken.getType() != LexicalAnalyzer.CONSTANT_TOKEN_TYPE) {
+        if (currentToken.getType() != SymbolManager.CONSTANT_TOKEN_TYPE) {
             throw new GrammarException("***LINE:" + line + "  expected: a constant, but get: \"" + currentToken.getSymbol() + "\"");
         }
         next();
     }
 
     private void checkIdentifier() throws GrammarException {
-        if (currentToken.getType() != LexicalAnalyzer.IDENTIFIER_TOKEN_TYPE) {
+        if (currentToken.getType() != SymbolManager.IDENTIFIER_TOKEN_TYPE) {
             throw new GrammarException("***LINE:" + line + "  expected: a identifier, but get: \"" + currentToken.getSymbol() + "\"");
         }
         next();
