@@ -584,21 +584,6 @@ public class GrammarAnalyzer {
             checkReservedWord(")");
 
             unsetRetractPoint();
-            return;
-        } catch (GrammarException e) {
-            retract();
-            prevException = e;
-        }
-
-        try {
-            setRetractPoint();
-
-            I();
-            checkReservedWord("(");
-            V();
-            checkReservedWord(")");
-
-            unsetRetractPoint();
         } catch (GrammarException e) {
             retract();
             throw e;
